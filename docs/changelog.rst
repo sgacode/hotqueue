@@ -2,6 +2,12 @@
 Changelog
 =========
 
+Changes in v0.2.9
+=================
+- json serializer by default
+- use exist redis instance
+- max_length option
+
 Changes in v0.2.8
 =================
 - Use HTTPS in distribute_setup.py
