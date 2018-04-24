@@ -4,18 +4,15 @@
 within your Python programs.
 """
 
+import json
 from functools import wraps
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
 
 from redis import Redis
 
 
 __all__ = ['HotQueue']
 
-__version__ = '0.2.8'
+__version__ = '0.2.9'
 
 
 def key_for_name(name):
@@ -28,9 +25,10 @@ class HotQueue(object):
     """Simple FIFO message queue stored in a Redis list. Example:
 
     >>> from hotqueue import HotQueue
-    >>> queue = HotQueue("myqueue", host="localhost", port=6379, db=0)
+    >>> queue = HotQueue("myqueue", redis=redis)
     
     :param name: name of the queue
+    :param redis: redis instance
     :param serializer: the class or module to serialize msgs with, must have
         methods or functions named ``dumps`` and ``loads``,
         `pickle <http://docs.python.org/library/pickle.html>`_ is the default,
@@ -40,10 +38,11 @@ class HotQueue(object):
         :attr:`host`, :attr:`port`, :attr:`db`
     """
     
-    def __init__(self, name, serializer=pickle, **kwargs):
+    def __init__(self, name, redis: Redis, serializer=json, **kwargs):
         self.name = name
         self.serializer = serializer
-        self.__redis = Redis(**kwargs)
+        self.__redis = redis
+        self.max_length = kwargs.get('max_length')
     
     def __len__(self):
         return self.__redis.llen(self.key)
@@ -118,6 +117,12 @@ class HotQueue(object):
         if self.serializer is not None:
             msgs = map(self.serializer.dumps, msgs)
         self.__redis.rpush(self.key, *msgs)
+
+        # reduce length if needed
+        if self.max_length and self.max_length > 0:
+            size_exceed = len(self) - self.max_length
+            if size_exceed:
+                self.__redis.ltrim(self.key, 0, -1 * size_exceed)
     
     def worker(self, *args, **kwargs):
         """Decorator for using a function as a queue worker. Example:
