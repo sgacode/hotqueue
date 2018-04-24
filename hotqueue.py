@@ -12,7 +12,7 @@ from redis import Redis
 
 __all__ = ['HotQueue']
 
-__version__ = '0.2.9'
+__version__ = '0.2.10'
 
 
 def key_for_name(name):

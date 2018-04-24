@@ -2,7 +2,7 @@
 Changelog
 =========
 
-Changes in v0.2.9
+Changes in v0.2.10
 =================
 - json serializer by default
 - use exist redis instance
