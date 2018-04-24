@@ -120,9 +120,10 @@ class HotQueue(object):
 
         # reduce length if needed
         if self.max_length and self.max_length > 0:
-            size_exceed = len(self) - self.max_length
-            if size_exceed:
-                self.__redis.ltrim(self.key, 0, -1 * size_exceed)
+            cur_length = len(self)
+            length_exceed = cur_length - self.max_length
+            if length_exceed > 0:
+                self.__redis.ltrim(self.key, length_exceed, cur_length)
     
     def worker(self, *args, **kwargs):
         """Decorator for using a function as a queue worker. Example:
